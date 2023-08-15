@@ -65,6 +65,17 @@ const getSize = (data) => {
   return 0;
 };
 
+const configureRequest = (request, collectionVariables, envVars) => {
+  if((collectionVariables.certificateValidation && collectionVariables.certificateValidation == 'false') 
+      || (!collectionVariables.certificateValidation && envVars.certificateValidation && envVars.certificateValidation == 'false')) {
+    const https = require('https');
+    request.httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+  }
+  return request;
+}
+
 const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
   // handler for sending http request
   ipcMain.handle('send-http-request', async (event, item, collectionUid, collectionPath, environment, collectionVariables) => {
@@ -145,8 +156,10 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
         cancelTokenUid
       });
 
+      configureRequest(request, collectionVariables, envVars);
+      
       const response = await axios(request);
-
+      
       // run post-response vars
       const postResponseVars = get(request, 'vars.res', []);
       if(postResponseVars && postResponseVars.length) {
@@ -370,6 +383,8 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
             },
             ...eventData
           });
+
+          configureRequest(request, collectionVariables, envVars);
 
           // send request
           timeStart = Date.now();
