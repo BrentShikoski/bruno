@@ -72,6 +72,16 @@ const configureRequest = (request, collectionVariables, envVars) => {
     request.httpsAgent = new https.Agent({
       rejectUnauthorized: false
     });
+
+    const tunnel = require('tunnel');
+    const agent = tunnel.httpsOverHttp({
+      proxy: {
+        host: '127.0.0.1',
+        port: 8080
+      },
+      rejectUnauthorized: false
+    });
+    request.httpsAgent = agent;
   }
   return request;
 }
@@ -336,6 +346,8 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
           const _request = item.draft ? item.draft.request : item.request;
           const request = prepareRequest(_request);
 
+          console.log(`(${request.url}`); //TODO
+
           // make axios work in node using form data
           // reference: https://github.com/axios/axios/issues/1006#issuecomment-320165427
           if(request.headers && request.headers['content-type'] === 'multipart/form-data') {
@@ -386,11 +398,73 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
 
           configureRequest(request, collectionVariables, envVars);
 
+/*          console.log("send request " + Object.entries(request));//TODO
+          console.log("request headers" + Object.entries(request.headers));//TODO
+          // require('axios-debug-log/enable');
+          require('axios-debug-log')({
+            request: function (debug, config) {
+              debug('Request with ' + config.headers['content-type'])
+            },
+            response: function (debug, response) {
+              debug(
+                'Response with ' + response.headers['content-type'],
+                'from ' + response.config.url
+              )
+            },
+            error: function (debug, error) {
+              // Read https://www.npmjs.com/package/axios#handling-errors for more info
+              debug('Boom', error)
+            }
+          });
+*/
+          var instance = axios.create({
+            validateStatus: function (status) {
+              return true; // always treat it as successful
+            }
+          });
+
           // send request
           timeStart = Date.now();
-          const response = await axios(request);
+          const response = await instance(request);
+          
+          /*
+          .catch(function (error) {
+            if (error.response) {
+              // The request was made and the server responded with a status code
+              // that falls out of the range of 2xx
+              console.log("response: " + error.response.data);
+              console.log("status: " + error.response.status);
+              console.log("headers: " + Object.entries(error.response.headers));
+            } else if (error.request) {
+              // The request was made but no response was received
+              // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+              // http.ClientRequest in node.js
+              console.log("no response, request: " + error.request);
+              console.log(error);
+            } else {
+              // Something happened in setting up the request that triggered an Error
+              console.log('Error', error.message);
+            }
+            console.log("config: ");
+            console.log(error.config);
+          });
+          */
           timeEnd = Date.now();
 
+          // console.log(`(${request.url} ${response.status} ${response.statusText})`);//TODO
+          console.log(`done: (${request.url})`);//TODO
+/*          if(response){
+            console.log(`response: (${response.status} ${response.statusText})`);//TODO
+            //if(response.status == 403) {
+              //console.log(`(${response.headers})`);
+              //console.log(`(${response.data})`);
+            console.log(response);
+            //}
+          }
+          else {
+            console.log("no response");//TODO
+          }
+*/
           // run post-response vars
           const postResponseVars = get(request, 'vars.res', []);
           if(postResponseVars && postResponseVars.length) {
@@ -471,6 +545,10 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
               size: error.response.headers['content-length'] || getSize(error.response.data),
               data: error.response.data,
             }
+            console.log(`(${error.message} ${error.response.status} ${error.response.statusText} ${error.response.data})`);//TODO
+          }
+          else{
+            console.log("error: " + error);//TODO
           }
           mainWindow.webContents.send('main:run-folder-event', {
             type: 'error',
@@ -478,6 +556,8 @@ const registerNetworkIpc = (mainWindow, watcher, lastOpenedCollections) => {
             responseReceived: responseReceived,
             ...eventData
           });
+
+          
         }
       }
 
