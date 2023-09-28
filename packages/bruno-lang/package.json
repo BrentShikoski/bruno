@@ -1,6 +1,6 @@
 {
   "name": "@usebruno/lang",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license" : "MIT",
   "main": "src/index.js",
   "files": [
@@ -15,6 +15,6 @@
   "dependencies": {
     "arcsecond": "^5.0.0",
     "lodash": "^4.17.21",
-    "ohm-js": "^16.6.0"
+    "ohm-js": "^17.1.0"
   }
 }
