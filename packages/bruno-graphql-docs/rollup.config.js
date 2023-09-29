@@ -33,7 +33,11 @@ module.exports = [
         extensions: ['.css']
       }),
       commonjs(),
-      typescript({ tsconfig: "./tsconfig.json" }),
+      typescript({ 
+          tsconfig: "./tsconfig.json",
+          declaration: true,
+          declarationDir: 'dist',
+	  }),
       terser()
     ],
     external: ["react", "react-dom", "index.css"]
@@ -42,5 +46,6 @@ module.exports = [
     input: "dist/esm/index.d.ts",
     output: [{ file: "dist/index.d.ts", format: "esm" }],
     plugins: [dts.default()],
+    external: [/\.css$/],
   }
 ];

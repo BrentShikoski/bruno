@@ -29,7 +29,7 @@ module.exports = [
       }),
       commonjs(),
       typescript({ 
-		  tsconfig: "./tsconfig.json",
+          tsconfig: "./tsconfig.json",
           declaration: true,
           declarationDir: 'dist',
 	  }),
